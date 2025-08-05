@@ -2,7 +2,9 @@ package org.soosdev;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.*;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,11 +15,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.web.servlet.HandlerMapping;
 
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/proxy")
+@RequestMapping
 public class ProxyController {
 
     private static final Logger logger = LogManager.getLogger(ProxyController.class);
@@ -104,8 +107,9 @@ public class ProxyController {
         return mapper.readValue(response.getBody(), Map.class);
     }
 
-    @GetMapping("/View/local/raw")
-    public ResponseEntity<byte[]> proxyFetchImage(@RequestParam("filename") String filename) {
+    @GetMapping("/View/local/raw/**")
+    public ResponseEntity<byte[]> proxyFetchImage(/*@PathVariable("filename") String filename*/HttpServletRequest request) {
+        String filename = new AntPathMatcher().extractPathWithinPattern(request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE).toString(),request.getRequestURI());
         String url = baseSwarmUrl.replace("/api", "") + "/View/local/raw/" + filename;
         logger.info("Fetching image: {} from URL: {}", filename, url);
         ResponseEntity<byte[]> response = restTemplate.exchange(
